@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="./css/add.css">
+    <title>增加新用户</title>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="item"><span>姓名: </span> <input type="text" id="username" /> </div>
+        <div class="item"><span>年龄: </span> <input type="text" id="age" /> </div>
+        <div class="item"><span>电话: </span> <input type="text" id="phone" /> </div>
+        <div class="item"><span>地址: </span> <input type="text" id="address" /> </div>
+        <div class="submit" id="submit">确认提交</div>
+    </div>
+    <script src="./modules/ajaxUtils.js"></script>
+    <script type="text/javascript">
+        var username = document.getElementById('username');
+        var age     = document.getElementById('age'),
+            phone   = document.getElementById('phone'),
+            address = document.getElementById('address'),
+            submit  = document.getElementById('submit');
+
+        function queryURLparameter() {
+            var curUrl = window.location.href;
+            var reg = /([^?&=]+)=([^?&=]+)/g;
+            var res = reg.exec(curUrl);
+            var URLparameter = {};
+            console.log(res);
+            
+            while(res) {
+                 URLparameter[res[1]] = res[2];
+                 res = reg.exec(curUrl);
+             }
+            return URLparameter;
+        }
+        
+        var url = queryURLparameter();
+        var flag = url['id'] ? true:false; 
+        if(url['id']) {
+            sendAjax({
+                url: '/getData?id=' + url['id'],
+                success: function(jsonData) {
+                    if (jsonData.code === 0) {
+                        username.value = jsonData.data['name'];
+                        age.value = jsonData.data['age'];   
+                        phone.value = jsonData.data['phone']; 
+                        address.value = jsonData.data['address']; 
+                    }
+                }
+            });
+        }
+        submit.onclick = function() {
+            name =  username.value.replace(/^ +| +$/, '');
+            age =  age.value.replace(/^ +| +$/, '');
+            phone =  phone.value.replace(/^ +| +$/, '');
+            address =  address.value.replace(/^ +| +$/, '');
+            var tempObj = {
+                'name': name,
+                'age': age,
+                'phone': phone,
+                'address': address
+            };
+            if (flag) {//->当前的操作是修改操作
+                tempObj["id"] = url['id'];
+                console.log(tempObj);
+                sendAjax({
+                    url: "/update",
+                    type: "post",
+                    data: JSON.stringify(tempObj),
+                    success: function (jsondata) {
+                        if (jsondata["code"] == 0) {
+                            alert("修改成功!");
+                            window.location.href = "index.html";
+                        } else {
+                            console.log(jsondata.message);
+                        }
+                    }
+                });
+                return;
+            }
+            sendAjax({
+                url: '/add',
+                type: 'post',
+                data: JSON.stringify(tempObj),
+                success: function(jsonData) {
+                    if (jsonData.code === 0) {
+                        alert('用户信息添加成功！');
+                    } else {
+                        alert(jsonData.message);
+                    }
+                    window.location.href = 'index.html';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
